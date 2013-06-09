@@ -383,6 +383,7 @@ function fuf#launch(modeName, initialPattern, partialMatching)
     autocmd!
     autocmd CursorMovedI <buffer>        call s:runningHandler.onCursorMovedI()
     autocmd InsertLeave  <buffer> nested call s:runningHandler.onInsertLeave()
+    autocmd BufLeave  <buffer> call s:deactivateFufBuffer()
   augroup END
   for [key, func] in [
         \   [ g:fuf_keyOpen          , 'onCr(' . s:OPEN_TYPE_CURRENT . ')' ],
