@@ -727,11 +727,14 @@ endfunction
 
 "
 function s:deactivateFufBuffer()
-  if exists(':AcpUnlock')
-    AcpUnlock
-  elseif exists(':AutoComplPopUnlock')
-    AutoComplPopUnlock
-  endif
+  try
+    if exists(':AcpUnlock')
+      AcpUnlock
+    elseif exists(':AutoComplPopUnlock')
+      AutoComplPopUnlock
+    endif
+  catch //
+  endtry
   call l9#tempbuffer#close(s:FUF_BUF_NAME)
 endfunction
 
