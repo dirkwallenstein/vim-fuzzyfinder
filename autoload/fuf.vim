@@ -383,7 +383,8 @@ function fuf#launch(modeName, initialPattern, partialMatching)
     autocmd!
     autocmd CursorMovedI <buffer>        call s:runningHandler.onCursorMovedI()
     autocmd InsertLeave  <buffer> nested call s:runningHandler.onInsertLeave()
-    autocmd BufLeave  <buffer> call s:deactivateFufBuffer()
+    autocmd BufLeave  <buffer> call s:unlockAcp()
+    autocmd BufEnter  <buffer> call s:lockAcp()
   augroup END
   for [key, func] in [
         \   [ g:fuf_keyOpen          , 'onCr(' . s:OPEN_TYPE_CURRENT . ')' ],
@@ -719,24 +720,50 @@ function s:activateFufBuffer()
   setlocal nocursorcolumn " for highlighting
   setlocal omnifunc=fuf#onComplete
   redraw " for 'lazyredraw'
-  if exists(':AcpLock')
-    AcpLock
-  elseif exists(':AutoComplPopLock')
-    AutoComplPopLock
-  endif
+  call s:lockAcp()
 endfunction
 
 "
 function s:deactivateFufBuffer()
+  call s:unlockAcp()
+  call l9#tempbuffer#close(s:FUF_BUF_NAME)
+endfunction
+
+
+" Acp Lock/Unlock -------------------------
+
+" Track ACP locking
+let s:fufs_acp_lock=0
+
+" lock ACP once if not already done
+function s:lockAcp()
+  if s:fufs_acp_lock
+      return
+  endif
+  if exists(':AcpLock')
+    AcpLock
+    let s:fufs_acp_lock=1
+  elseif exists(':AutoComplPopLock')
+    AutoComplPopLock
+    let s:fufs_acp_lock=1
+  endif
+endfunction
+
+" unlock ACP once if not already done
+function s:unlockAcp()
+  if !s:fufs_acp_lock
+      return
+  endif
   try
     if exists(':AcpUnlock')
+      let s:fufs_acp_lock=0
       AcpUnlock
     elseif exists(':AutoComplPopUnlock')
+      let s:fufs_acp_lock=0
       AutoComplPopUnlock
     endif
   catch //
   endtry
-  call l9#tempbuffer#close(s:FUF_BUF_NAME)
 endfunction
 
 " }}}1
